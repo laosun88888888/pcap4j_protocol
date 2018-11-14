@@ -43,7 +43,6 @@ public class App
     	int tagnetwork = 0;
     	// 获取所有网卡设备
         List<PcapNetworkInterface> alldev = Pcaps.findAllDevs();
-        System.out.println("asdk");
         // 根据设备名称初始化抓包接口
         PcapNetworkInterface nif = Pcaps.getDevByName(alldev.get(tagnetwork).getName());
         for(PcapAddress a:nif.getAddresses())
