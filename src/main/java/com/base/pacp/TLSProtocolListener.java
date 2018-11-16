@@ -59,6 +59,7 @@ public class TLSProtocolListener extends ProtocolListener {
 	{
 		public int length;
 		public byte[] bytes;
+		public String hex;
 	}
 	public class CipherSuite
 	{
@@ -139,7 +140,7 @@ public class TLSProtocolListener extends ProtocolListener {
 			 if(tls!=null)
 			 {
 				 offset += tls.length+5;
-				 ysize =data.length - tls.length-5;
+				 ysize =ysize - tls.length-5;
 				 
 				 tlslist.add(tls);
 			 }
@@ -159,11 +160,11 @@ public class TLSProtocolListener extends ProtocolListener {
 	{
 		TLSRecord tls = new TLSRecord();
 		int init = 0 + offset; 
-		int content_type = data[0+offset];
+		int content_type = bytesToIntTlsRecord1(data,init); //data[0+offset];
 		init +=1;
-		int major = data[1+offset];
+		int major = bytesToIntTlsRecord1(data,1+offset); //data[1+offset];
 		init +=1;
-		int minor = data[2+offset];
+		int minor = bytesToIntTlsRecord1(data,2+offset);// data[2+offset];
 		init +=1;
 		int length=bytesToIntTlsRecord2(data,init);
 		init +=2;
@@ -180,7 +181,7 @@ public class TLSProtocolListener extends ProtocolListener {
 			while(count<tls.length)
 			{
 			Handshake hs = new Handshake();
-			hs.Message_types_int = data[init];
+			hs.Message_types_int = bytesToIntTlsRecord1(data,init);// data[init];
 			init +=1;
 			hs.length = bytesToIntTlsRecord3(data,init);
 			init +=3;
@@ -206,22 +207,23 @@ public class TLSProtocolListener extends ProtocolListener {
 					hs.Message_types = "ClientHello";
 					hs.clientHello = new ClientHello();
 					hs.clientHello.client_version = new ProtocolVersion();
-					hs.clientHello.client_version.major = hs.message_data[0];
-					hs.clientHello.client_version.minor = hs.message_data[1];
+					hs.clientHello.client_version.major = bytesToIntTlsRecord1(hs.message_data,0);// hs.message_data[0];
+					hs.clientHello.client_version.minor = bytesToIntTlsRecord1(hs.message_data,1);// hs.message_data[1];
 					hs.clientHello.random = new Random();
 					hs.clientHello.random.gmt_unix_time = bytesTolong(hs.message_data,2);
 					hs.clientHello.random.random_bytes = new byte[28];
 					clientInit =6;
 					System.arraycopy(hs.message_data,clientInit,hs.clientHello.random.random_bytes,0,28);
-					hs.clientHello.session_id = new SessionID();
 					clientInit += 28;
-					hs.clientHello.session_id.length=hs.message_data[clientInit];
+					hs.clientHello.session_id = new SessionID();
+					hs.clientHello.session_id.length=bytesToIntTlsRecord1(hs.message_data,clientInit);// hs.message_data[clientInit];
 					clientInit += 1;
 					if(hs.clientHello.session_id.length>0)
 					{
 						hs.clientHello.session_id.bytes = new byte[hs.clientHello.session_id.length];
 						
 						System.arraycopy(hs.message_data,clientInit,hs.clientHello.session_id.bytes,0,hs.clientHello.session_id.length);
+						hs.clientHello.session_id.hex = byteToHexString(hs.clientHello.session_id.bytes);
 					}
 					clientInit += hs.clientHello.session_id.length;
 					int cipher_suites_length =bytesToIntTlsRecord2(hs.message_data,clientInit);
@@ -239,7 +241,7 @@ public class TLSProtocolListener extends ProtocolListener {
 						}
 					}
 					clientInit +=cipher_suites_length;
-					int compression_methods_length= hs.message_data[clientInit];
+					int compression_methods_length= bytesToIntTlsRecord1(hs.message_data,clientInit);// hs.message_data[clientInit];
 					clientInit +=1;
 					if(compression_methods_length>0)
 					{
@@ -247,7 +249,7 @@ public class TLSProtocolListener extends ProtocolListener {
 						for(int i=0;i<compression_methods_length;i++)
 						{
 							CompressionMethod cm = new CompressionMethod();
-							cm.method = hs.message_data[clientInit+i];
+							cm.method = bytesToIntTlsRecord1(hs.message_data,clientInit+i);// hs.message_data[clientInit+i];
 							hs.clientHello.compression_methods.add(cm);
 						}
 					}
@@ -282,8 +284,8 @@ public class TLSProtocolListener extends ProtocolListener {
 					int serverInit = 0;
 					hs.serverHello = new ServerHello();
 					hs.serverHello.server_version = new ProtocolVersion();
-					hs.serverHello.server_version.major = hs.message_data[0];
-					hs.serverHello.server_version.minor = hs.message_data[1];
+					hs.serverHello.server_version.major = bytesToIntTlsRecord1(hs.message_data,0);// hs.message_data[0];
+					hs.serverHello.server_version.minor = bytesToIntTlsRecord1(hs.message_data,1);// hs.message_data[1];
 					hs.serverHello.random = new Random();
 					hs.serverHello.random.gmt_unix_time = bytesTolong(hs.message_data,2);
 					hs.serverHello.random.random_bytes = new byte[28];
@@ -291,13 +293,14 @@ public class TLSProtocolListener extends ProtocolListener {
 					System.arraycopy(hs.message_data,serverInit,hs.serverHello.random.random_bytes,0,28);
 					hs.serverHello.session_id = new SessionID();
 					serverInit += 28;
-					hs.serverHello.session_id.length=hs.message_data[serverInit];
+					hs.serverHello.session_id.length=bytesToIntTlsRecord1(hs.message_data,serverInit);// hs.message_data[serverInit];
 					serverInit += 1;
 					if(hs.serverHello.session_id.length>0)
 					{
 						hs.serverHello.session_id.bytes = new byte[hs.serverHello.session_id.length];
 						 
 						System.arraycopy(hs.message_data,serverInit,hs.serverHello.session_id.bytes,0,hs.serverHello.session_id.length);
+						hs.serverHello.session_id.hex = byteToHexString(hs.serverHello.session_id.bytes);
 					}
 					hs.serverHello.cipher_suite = new CipherSuite();
 					
@@ -305,9 +308,14 @@ public class TLSProtocolListener extends ProtocolListener {
 					hs.serverHello.cipher_suite.cipher_suite =bytesToIntTlsRecord2(hs.message_data,serverInit);
 					hs.serverHello.cipher_suite.value();
 					serverInit +=2;
+					
+					if(hs.message_data.length <= serverInit) break;
+					
 					hs.serverHello.compression_methods = new CompressionMethod();
-					hs.serverHello.compression_methods.method=hs.message_data[serverInit];
+					hs.serverHello.compression_methods.method=bytesToIntTlsRecord1(hs.message_data,serverInit);// hs.message_data[serverInit];
 					serverInit +=1;
+					
+					if(hs.message_data.length <= serverInit) break;
 					
 					int extensions_length= bytesToIntTlsRecord2(hs.message_data,serverInit);
 					serverInit +=2;
@@ -574,7 +582,11 @@ public class TLSProtocolListener extends ProtocolListener {
 		
 		return tls;
 	}
-	
+	public static int bytesToIntTlsRecord1(byte[] src,int offset) {  
+	    int value;    
+	    value = (int) (src[offset+0] & 0xFF);  
+	    return value;  
+	}
 	public static int bytesToIntTlsRecord2(byte[] src,int offset) {  
 	    int value;    
 	    value = (int) ((src[offset+1] & 0xFF)   
@@ -610,5 +622,30 @@ public class TLSProtocolListener extends ProtocolListener {
 	            | ((src[offset+1] & 0xFF)<<8));  
 	    return value;  
 	}
+	public static String byteToHexString(byte[] bArray) {
+	    int offset = 0;
+	    int len = bArray.length;
+	    StringBuffer sb = new StringBuffer(len);
+	    String sTemp;
+	    for (int i = offset; i < offset + len; i++) {
+	        sTemp = Integer.toHexString(0xFF & bArray[i]);
+	        if (sTemp.length() < 2)
+	           sb.append(0);
+	           sb.append(sTemp);
+	        }
+	    return sb.toString();
+	}
+ 
+	public static byte[] hexToByteArray(String hexString) {
+	    int len = hexString.length();
+	    byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(hexString.charAt(i), 16) << 4 )+Character.digit(hexString.charAt(i + 1), 16));
+	    }
+	    return data;
+	}
+
+
+
 
 }
