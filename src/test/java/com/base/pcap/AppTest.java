@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -52,9 +53,12 @@ public class AppTest
 
     /**
      * Rigourous Test :-)
+     * @throws NoSuchAlgorithmException 
      */
-    public void testApp()
+    public void testApp() throws NoSuchAlgorithmException
     {
+    	  
+    	
     	String hexkey= "5ca8218654afa3fe6f3db6170049444ab03eb96b556db97dc32c5ca9e13958629f575ed44af268bf8a04c98ba2aefa16";
     	byte[] b_key = TLSProtocolListener.hexToByteArray(hexkey);
     	byte[] key = new byte[32];
@@ -62,12 +66,27 @@ public class AppTest
         byte[] iv = new byte[16];
         System.arraycopy(b_key,32,iv,0,16);
         
-    	String base64Content = "5NUSmEuWKUtFJRHHhN4h5xmcCl1w0hCr9DaAJIGwdYCxgbdFfoHVV+MXJAtCq6h3Mj+9/0DnaumkpH/T3Aspqw==";
-    	byte[]c_byte_content = Base64.getDecoder().decode(base64Content);
-    	byte[] byte_content = AESDncode(key,c_byte_content,iv);
+    	String stringContent = "Hello world!";
+    	byte[] byte_string = stringContent.getBytes();
+    	byte[]c_byte_content = Base64.getEncoder().encode(byte_string);    	
+    	byte[] byte_content = AESEncode(key,byte_string,iv);
+    	byte[] byte_base64_content = Base64.getEncoder().encode(byte_content);
+    	String base64Content = new String(byte_base64_content);
+    	c_byte_content = Base64.getDecoder().decode(base64Content);
+    	byte_content = AESDncode(key,c_byte_content,iv);
     	String content = new String(byte_content);
     	System.out.println(content);
         assertTrue( true );
+    }
+    private static byte[] tohash256Deal(String datastr) {  
+        try {  
+            MessageDigest digester=MessageDigest.getInstance("SHA-256");  
+            digester.update(datastr.getBytes());  
+            byte[] hex=digester.digest();  
+            return hex;   
+        } catch (NoSuchAlgorithmException e) {  
+            throw new RuntimeException(e.getMessage());    
+        }  
     }
     public static byte[] AESDncode(byte[] raw_key,byte[] byte_content,byte[] iv){
         try {
@@ -82,8 +101,41 @@ public class AppTest
             /*
              * 解密
              */
-            byte [] byte_decode=cipher.doFinal(byte_content);
-            return byte_decode;
+            byte [] byte_data=cipher.doFinal(byte_content);
+            return byte_data;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        //如果有错就返加nulll
+        return null;         
+    }
+    public static byte[] AESEncode(byte[] raw_key,byte[] byte_content,byte[] iv){
+        try {
+            //5.根据字节数组生成AES密钥
+            SecretKey key=new SecretKeySpec(raw_key, "AES");
+            GCMParameterSpec gcm = new GCMParameterSpec(16 * Byte.SIZE, iv);
+              //6.根据指定算法AES自成密码器
+            Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");
+              //7.初始化密码器，第一个参数为加密(Encrypt_mode)或者解密(Decrypt_mode)操作，第二个参数为使用的KEY
+            cipher.init(Cipher.ENCRYPT_MODE, key,gcm);
+            //8.将加密并编码后的内容解码成字节数组
+            /*
+             * 解密
+             */
+            byte [] byte_data=cipher.doFinal(byte_content);
+            return byte_data;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchPaddingException e) {
