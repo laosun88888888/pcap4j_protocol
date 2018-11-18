@@ -54,6 +54,7 @@ public class TLSProtocolListener extends ProtocolListener {
 	{
 		public long gmt_unix_time;
 		public byte[] random_bytes = new byte[28];
+		public String hex;
 	}
 	public class SessionID
 	{
@@ -209,10 +210,14 @@ public class TLSProtocolListener extends ProtocolListener {
 					hs.clientHello.client_version = new ProtocolVersion();
 					hs.clientHello.client_version.major = bytesToIntTlsRecord1(hs.message_data,0);// hs.message_data[0];
 					hs.clientHello.client_version.minor = bytesToIntTlsRecord1(hs.message_data,1);// hs.message_data[1];
+					clientInit =2;
 					hs.clientHello.random = new Random();
 					hs.clientHello.random.gmt_unix_time = bytesTolong(hs.message_data,2);
 					hs.clientHello.random.random_bytes = new byte[28];
-					clientInit =6;
+					byte[] byte32 = new byte[32];
+					System.arraycopy(hs.message_data,clientInit,byte32,0,32);
+					hs.clientHello.random.hex = byteToHexString(byte32);
+					clientInit +=4;
 					System.arraycopy(hs.message_data,clientInit,hs.clientHello.random.random_bytes,0,28);
 					clientInit += 28;
 					hs.clientHello.session_id = new SessionID();
@@ -286,10 +291,14 @@ public class TLSProtocolListener extends ProtocolListener {
 					hs.serverHello.server_version = new ProtocolVersion();
 					hs.serverHello.server_version.major = bytesToIntTlsRecord1(hs.message_data,0);// hs.message_data[0];
 					hs.serverHello.server_version.minor = bytesToIntTlsRecord1(hs.message_data,1);// hs.message_data[1];
+					serverInit =2;
 					hs.serverHello.random = new Random();
 					hs.serverHello.random.gmt_unix_time = bytesTolong(hs.message_data,2);
 					hs.serverHello.random.random_bytes = new byte[28];
-					serverInit =6;
+					byte[] byte32 = new byte[32];
+					System.arraycopy(hs.message_data,serverInit,byte32,0,32);
+					hs.serverHello.random.hex = byteToHexString(byte32);
+					serverInit +=4;
 					System.arraycopy(hs.message_data,serverInit,hs.serverHello.random.random_bytes,0,28);
 					hs.serverHello.session_id = new SessionID();
 					serverInit += 28;

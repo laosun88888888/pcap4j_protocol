@@ -59,20 +59,21 @@ public class AppTest
     {
     	  
     	
-    	String hexkey= "5ca8218654afa3fe6f3db6170049444ab03eb96b556db97dc32c5ca9e13958629f575ed44af268bf8a04c98ba2aefa16";
-    	byte[] b_key = TLSProtocolListener.hexToByteArray(hexkey);
-    	byte[] key = new byte[32];
-    	System.arraycopy(b_key,0,key,0,32);
-        byte[] iv = new byte[16];
-        System.arraycopy(b_key,32,iv,0,16);
+    	//String hexkey= "f75fcabc2fac7f8adb913ffd4898fd3ff61dd4f865ce601d1bbd92cb31ba8e850f6e8835a24d3eb2f883d3a4852d262a";
+//    	byte[] b_key = TLSProtocolListener.hexToByteArray(hexkey);
+    	byte[] key = TLSProtocolListener.hexToByteArray("2b698068f864db9a1146ed7e3caa826f");
+        byte[] iv =TLSProtocolListener.hexToByteArray("560f6071");
         
-    	String stringContent = "Hello world!";
-    	byte[] byte_string = stringContent.getBytes();
-    	byte[]c_byte_content = Base64.getEncoder().encode(byte_string);    	
+//    	String stringContent = "Hello world!";
+//    	byte[] byte_string = stringContent.getBytes();
+        byte[] byte_string = TLSProtocolListener.hexToByteArray("1400000cf5951ef0f6737d1dd5b17ca70f7b01948dfbc25d517ed602480b27c9");
+//    	byte[]c_byte_content = Base64.getEncoder().encode(byte_string);    	
     	byte[] byte_content = AESEncode(key,byte_string,iv);
-    	byte[] byte_base64_content = Base64.getEncoder().encode(byte_content);
-    	String base64Content = new String(byte_base64_content);
-    	c_byte_content = Base64.getDecoder().decode(base64Content);
+//    	byte[] byte_base64_content = Base64.getEncoder().encode(byte_content);
+//    	String base64Content = new String(byte_base64_content);
+    	String base64Content="Xl8H8KmsJaRFiDqEC/AmR1N2q3Mdkmw/k7b+S/haSvUBFD+bOt4zdsCQ7Sd14smwBQSzIWYnLw+oleqMTW0ctA==";
+    	byte[] c_byte_content = Base64.getDecoder().decode(base64Content);
+    	c_byte_content = TLSProtocolListener.hexToByteArray("409eb7fb450ca6308487051a0f398de4ef00f0e3faa7f3caa4df39ad9fc7caf565ab1474306e69e51b37ed9de59d8223879cf40ade912e350b1c468a85e79aa3");
     	byte_content = AESDncode(key,c_byte_content,iv);
     	String content = new String(byte_content);
     	System.out.println(content);
@@ -94,7 +95,7 @@ public class AppTest
             SecretKey key=new SecretKeySpec(raw_key, "AES");
             GCMParameterSpec gcm = new GCMParameterSpec(16 * Byte.SIZE, iv);
               //6.根据指定算法AES自成密码器
-            Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");
+            Cipher cipher=Cipher.getInstance("AES/GCM/PKCS5Padding ");
               //7.初始化密码器，第一个参数为加密(Encrypt_mode)或者解密(Decrypt_mode)操作，第二个参数为使用的KEY
             cipher.init(Cipher.DECRYPT_MODE, key,gcm);
             //8.将加密并编码后的内容解码成字节数组
@@ -127,7 +128,7 @@ public class AppTest
             SecretKey key=new SecretKeySpec(raw_key, "AES");
             GCMParameterSpec gcm = new GCMParameterSpec(16 * Byte.SIZE, iv);
               //6.根据指定算法AES自成密码器
-            Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");
+            Cipher cipher=Cipher.getInstance("AES/GCM/PKCS5Padding ");
               //7.初始化密码器，第一个参数为加密(Encrypt_mode)或者解密(Decrypt_mode)操作，第二个参数为使用的KEY
             cipher.init(Cipher.ENCRYPT_MODE, key,gcm);
             //8.将加密并编码后的内容解码成字节数组
